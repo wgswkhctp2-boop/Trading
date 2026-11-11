@@ -1,0 +1,17 @@
+[project]
+name = "trading-intelligence-workspace"
+version = "0.1.0"
+description = "Python runtime environment for the AI Trading Intelligence workspace"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.162.4",
+    "pydantic-settings>=2.16.2",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+trading-intelligence-workspace = "repl_nix_workspace:main"
+
+[build-system]
+requires = ["uv_build>=0.13.4,<0.14.0"]
+build-backend = "uv_build"

@@ -1,0 +1,55 @@
+kind = "web"
+previewPath = "/"
+title = "AI Trading Intelligence"
+description = "A demo-mode trading intelligence workspace for exploring market signals, multi-agent analysis, portfolio risk and strategy research. Uses clearly labeled simulated data and does not place real trades."
+version = "1.0.0"
+id = "artifacts/trading-intelligence"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22814
+
+[services.development]
+run = "pnpm --filter @workspace/trading-intelligence run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/trading-intelligence", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/trading-intelligence/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22814"
+BASE_PATH = "/"
+[[services]]
+name = "python-api"
+paths = ["/api/trading"]
+localPort = 22815
+
+[services.development]
+run = "cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
+[services.production]
+
+[services.production.build]
+args = ["python", "-m", "pip", "install", "--no-cache-dir", "-r", "artifacts/trading-intelligence/backend/requirements.txt"]
+
+[services.production.run]
+args = ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "22815"]
+
+[services.production.run.env]
+PORT = "22815"
+APP_ENV = "production"
+PYTHONPATH = "artifacts/trading-intelligence/backend"
+
+[services.production.health.startup]
+path = "/api/trading/healthz"
+
+[services.env]
+PORT = "22815"
+APP_ENV = "development"

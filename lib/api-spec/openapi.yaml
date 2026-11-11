@@ -3,13 +3,15 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Demo-only API for AI Trading Intelligence. All market and portfolio values are simulated.
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: trading
+    description: Simulated market and agent intelligence
 paths:
   /healthz:
     get:
@@ -24,6 +26,172 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /trading/dashboard:
+    get:
+      operationId: getTradingDashboard
+      tags: [trading]
+      summary: Get the simulated account dashboard
+      responses:
+        "200":
+          description: Demo dashboard snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSnapshot"
+  /trading/agents:
+    get:
+      operationId: getTradingAgents
+      tags: [trading]
+      summary: List specialized demo agents and their current work
+      responses:
+        "200":
+          description: Agent roster
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradingAgent"
+  /trading/signals:
+    get:
+      operationId: getTradingSignals
+      tags: [trading]
+      summary: List simulated research signals
+      responses:
+        "200":
+          description: Simulated signals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradingSignal"
+  /trading/market:
+    get:
+      operationId: getMarketSnapshot
+      tags: [trading]
+      summary: Get simulated price history for an instrument
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: interval
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [1D, 1W, 1M]
+            default: 1D
+      responses:
+        "200":
+          description: Simulated OHLC market snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketSnapshot"
+  /trading/strategies:
+    get:
+      operationId: getTradingStrategies
+      tags: [trading]
+      summary: List example strategies and historical demo metrics
+      responses:
+        "200":
+          description: Demo strategies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradingStrategy"
+  /trading/backtests:
+    post:
+      operationId: runTradingBacktest
+      tags: [trading]
+      summary: Run a simulated strategy backtest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BacktestInput"
+      responses:
+        "200":
+          description: Simulated backtest result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BacktestResult"
+  /trading/collaboration:
+    get:
+      operationId: getAgentCollaboration
+      tags: [trading]
+      summary: Get the simulated agent discussion log
+      responses:
+        "200":
+          description: Agent collaboration timeline
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AgentMessage"
+  /trading/trades:
+    get:
+      operationId: getTradingHistory
+      tags: [trading]
+      summary: List simulated trade history
+      responses:
+        "200":
+          description: Demo-only trade history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TradeRecord"
+  /trading/risk:
+    get:
+      operationId: getRiskSettings
+      tags: [trading]
+      summary: Get demo risk guardrails
+      responses:
+        "200":
+          description: Current risk settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskSettings"
+    put:
+      operationId: updateRiskSettings
+      tags: [trading]
+      summary: Update in-memory demo risk guardrails
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskSettingsInput"
+      responses:
+        "200":
+          description: Updated risk settings for this running demo process
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskSettings"
+  /trading/system:
+    get:
+      operationId: getTradingSystemStatus
+      tags: [trading]
+      summary: Get demo mode and integration readiness
+      responses:
+        "200":
+          description: System and integration status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStatus"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +201,198 @@ components:
           type: string
       required:
         - status
+    DashboardSnapshot:
+      type: object
+      required: [mode, dataLabel, updatedAt, account, equityCurve, positions, signals]
+      properties:
+        mode: { type: string, enum: [DEMO] }
+        dataLabel: { type: string, enum: [SIMULATED] }
+        updatedAt: { type: string, format: date-time }
+        account: { $ref: "#/components/schemas/AccountSnapshot" }
+        equityCurve:
+          type: array
+          items: { $ref: "#/components/schemas/EquityPoint" }
+        positions:
+          type: array
+          items: { $ref: "#/components/schemas/OpenPosition" }
+        signals:
+          type: array
+          items: { $ref: "#/components/schemas/TradingSignal" }
+    AccountSnapshot:
+      type: object
+      required: [currency, balance, equity, dayPnl, dayPnlPercent, openPositions, riskUsedPercent]
+      properties:
+        currency: { type: string }
+        balance: { type: number }
+        equity: { type: number }
+        dayPnl: { type: number }
+        dayPnlPercent: { type: number }
+        openPositions: { type: integer }
+        riskUsedPercent: { type: number }
+    EquityPoint:
+      type: object
+      required: [timestamp, value]
+      properties:
+        timestamp: { type: string, format: date-time }
+        value: { type: number }
+    OpenPosition:
+      type: object
+      required: [id, symbol, side, quantity, entryPrice, markPrice, pnl, openedAt]
+      properties:
+        id: { type: string }
+        symbol: { type: string }
+        side: { type: string, enum: [LONG, SHORT] }
+        quantity: { type: number }
+        entryPrice: { type: number }
+        markPrice: { type: number }
+        pnl: { type: number }
+        openedAt: { type: string, format: date-time }
+    TradingAgent:
+      type: object
+      required: [id, name, specialty, status, confidence, summary, lastRun]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        specialty: { type: string }
+        status: { type: string, enum: [ANALYZING, MONITORING, IDLE, PAUSED] }
+        confidence: { type: number, minimum: 0, maximum: 100 }
+        summary: { type: string }
+        lastRun: { type: string, format: date-time }
+    TradingSignal:
+      type: object
+      required: [id, symbol, direction, timeframe, confidence, rationale, createdAt, dataLabel]
+      properties:
+        id: { type: string }
+        symbol: { type: string }
+        direction: { type: string, enum: [LONG_BIAS, SHORT_BIAS, NEUTRAL] }
+        timeframe: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 100 }
+        rationale: { type: string }
+        createdAt: { type: string, format: date-time }
+        dataLabel: { type: string, enum: [SIMULATED] }
+    MarketSnapshot:
+      type: object
+      required: [symbol, name, interval, dataLabel, candles, indicators]
+      properties:
+        symbol: { type: string }
+        name: { type: string }
+        interval: { type: string, enum: [1D, 1W, 1M] }
+        dataLabel: { type: string, enum: [SIMULATED] }
+        candles:
+          type: array
+          items: { $ref: "#/components/schemas/MarketCandle" }
+        indicators:
+          type: array
+          items: { $ref: "#/components/schemas/MarketIndicator" }
+    MarketCandle:
+      type: object
+      required: [timestamp, open, high, low, close]
+      properties:
+        timestamp: { type: string, format: date-time }
+        open: { type: number }
+        high: { type: number }
+        low: { type: number }
+        close: { type: number }
+    MarketIndicator:
+      type: object
+      required: [name, value, unit]
+      properties:
+        name: { type: string }
+        value: { type: number }
+        unit: { type: string }
+    TradingStrategy:
+      type: object
+      required: [id, name, description, status, symbols, winRate, profitFactor, maxDrawdown, tradesCount]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        status: { type: string, enum: [PAPER, RESEARCH, PAUSED] }
+        symbols:
+          type: array
+          items: { type: string }
+        winRate: { type: number }
+        profitFactor: { type: number }
+        maxDrawdown: { type: number }
+        tradesCount: { type: integer }
+    BacktestInput:
+      type: object
+      required: [strategyId, symbol, interval, startingCapital]
+      properties:
+        strategyId: { type: string }
+        symbol: { type: string }
+        interval: { type: string, enum: [1D, 1W, 1M] }
+        startingCapital: { type: number, exclusiveMinimum: 0 }
+    BacktestResult:
+      type: object
+      required: [strategyId, symbol, dataLabel, netReturnPercent, winRate, maxDrawdownPercent, tradesCount, equityCurve]
+      properties:
+        strategyId: { type: string }
+        symbol: { type: string }
+        dataLabel: { type: string, enum: [SIMULATED] }
+        netReturnPercent: { type: number }
+        winRate: { type: number }
+        maxDrawdownPercent: { type: number }
+        tradesCount: { type: integer }
+        equityCurve:
+          type: array
+          items: { $ref: "#/components/schemas/EquityPoint" }
+    AgentMessage:
+      type: object
+      required: [id, agentId, agentName, message, sentiment, createdAt]
+      properties:
+        id: { type: string }
+        agentId: { type: string }
+        agentName: { type: string }
+        message: { type: string }
+        sentiment: { type: string, enum: [SUPPORT, CAUTION, NEUTRAL] }
+        createdAt: { type: string, format: date-time }
+    TradeRecord:
+      type: object
+      required: [id, symbol, side, quantity, entryPrice, exitPrice, pnl, openedAt, closedAt, result]
+      properties:
+        id: { type: string }
+        symbol: { type: string }
+        side: { type: string, enum: [LONG, SHORT] }
+        quantity: { type: number }
+        entryPrice: { type: number }
+        exitPrice: { type: number }
+        pnl: { type: number }
+        openedAt: { type: string, format: date-time }
+        closedAt: { type: string, format: date-time }
+        result: { type: string, enum: [WIN, LOSS, FLAT] }
+    RiskSettings:
+      type: object
+      required: [riskPerTradePercent, dailyLossLimitPercent, maxDrawdownPercent, maxOpenPositions, executionEnabled]
+      properties:
+        riskPerTradePercent: { type: number }
+        dailyLossLimitPercent: { type: number }
+        maxDrawdownPercent: { type: number }
+        maxOpenPositions: { type: integer }
+        executionEnabled: { type: boolean, enum: [false] }
+    RiskSettingsInput:
+      type: object
+      required: [riskPerTradePercent, dailyLossLimitPercent, maxDrawdownPercent, maxOpenPositions]
+      properties:
+        riskPerTradePercent: { type: number, exclusiveMinimum: 0, maximum: 5 }
+        dailyLossLimitPercent: { type: number, exclusiveMinimum: 0, maximum: 20 }
+        maxDrawdownPercent: { type: number, exclusiveMinimum: 0, maximum: 50 }
+        maxOpenPositions: { type: integer, minimum: 1, maximum: 20 }
+    SystemStatus:
+      type: object
+      required: [mode, dataLabel, tradingEnabled, integrations]
+      properties:
+        mode: { type: string, enum: [DEMO] }
+        dataLabel: { type: string, enum: [SIMULATED] }
+        tradingEnabled: { type: boolean, enum: [false] }
+        integrations:
+          type: array
+          items: { $ref: "#/components/schemas/IntegrationStatus" }
+    IntegrationStatus:
+      type: object
+      required: [name, status, note]
+      properties:
+        name: { type: string }
+        status: { type: string, enum: [READY, PLANNED, NOT_CONFIGURED] }
+        note: { type: string }
 

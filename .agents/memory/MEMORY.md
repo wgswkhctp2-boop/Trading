@@ -1,0 +1,1 @@
+- [Artifact service working directory](artifact-service-working-directory.md) — managed development commands start from the artifact directory; production commands may start at workspace root.
